@@ -10,9 +10,11 @@ x-airflow-common: &airflow-common
     _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-standard apache-airflow-providers-postgres pandas sqlalchemy"
     AIRFLOW_CONN_OLTP_CONN: "postgresql://admin:password@oltp:5432/palantir_oltp_pg"
     AIRFLOW_CONN_DW_CONN: "postgresql://admin:password@dw:5432/palantir_dw_pg"
+    AIRFLOW__API__SECRET_KEY: 'test123' # Move this to a secure location later
+    AIRFLOW__API_AUTH__JWT_SECRET: 'test321' # Move this to a secure location later
   volumes:
     - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
+    - airflow_logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     - ./config:/opt/airflow/config
   user: "${AIRFLOW_UID:-50000}:0"
@@ -108,7 +110,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -137,6 +139,7 @@ services:
         condition: service_completed_successfully
 
 volumes:
+  airflow_logs:
   palantir_pgdata:
   palantir_dw_pgdata:
   palantir_airflow_meta_data:
